@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initLiveTicker();
   initHeaderScroll();
   initScrollSpy();
+  initSecurity();       // Security features
 });
 
 // Primary Contact Numbers
@@ -297,6 +298,8 @@ function initMobileMenu() {
   const backdrop = document.getElementById('navBackdrop');
   const navLinks = document.querySelectorAll('.nav-menu .nav-link');
 
+  let scrollStartY = 0; // Menu open hote waqt scroll position
+
   function openMenu() {
     if (navMenu) navMenu.classList.add('active');
     if (backdrop) backdrop.classList.add('active');
@@ -304,7 +307,8 @@ function initMobileMenu() {
       toggleBtn.classList.add('active');
       toggleBtn.setAttribute('aria-expanded', 'true');
     }
-    document.body.style.overflow = 'hidden'; // Lock background scrolling
+    scrollStartY = window.scrollY; // Current position note karo
+    document.body.style.overflow = 'hidden';
   }
 
   function closeMenu() {
@@ -314,7 +318,7 @@ function initMobileMenu() {
       toggleBtn.classList.remove('active');
       toggleBtn.setAttribute('aria-expanded', 'false');
     }
-    document.body.style.overflow = ''; // Restore scrolling
+    document.body.style.overflow = '';
   }
 
   if (toggleBtn) {
@@ -336,18 +340,29 @@ function initMobileMenu() {
     backdrop.addEventListener('click', closeMenu);
   }
 
+  // Nav link click par menu band karo
   navLinks.forEach(link => {
     link.addEventListener('click', () => {
       closeMenu();
     });
   });
 
-  // Close on Escape key press
+  // Escape key par menu band karo
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && navMenu && navMenu.classList.contains('active')) {
       closeMenu();
     }
   });
+
+  // Scroll par auto-close — 100px scroll hone par menu band ho
+  window.addEventListener('scroll', () => {
+    if (navMenu && navMenu.classList.contains('active')) {
+      const scrolled = Math.abs(window.scrollY - scrollStartY);
+      if (scrolled > 100) {
+        closeMenu();
+      }
+    }
+  }, { passive: true });
 }
 
 /* ==========================================================================
@@ -493,3 +508,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+/* ==========================================================================
+   13. SECURITY MODULE — Basic Protection
+   Features:
+   - Right-click / context menu disable
+   - Image drag protection
+   - iFrame embedding block
+   ========================================================================== */
+
+function initSecurity() {
+
+  /* 1. RIGHT-CLICK DISABLE */
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+  });
+
+  /* 2. IMAGE DRAG PROTECTION */
+  document.querySelectorAll('img').forEach(img => {
+    img.setAttribute('draggable', 'false');
+    img.addEventListener('dragstart', (e) => e.preventDefault());
+  });
+
+  /* 3. IFRAME EMBEDDING BLOCK */
+  if (window.self !== window.top) {
+    try {
+      window.top.location = window.self.location;
+    } catch (e) {
+      document.body.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:center;' +
+        'height:100vh;font-family:sans-serif;font-size:1.1rem;color:#e74c3c;">' +
+        '&#x26D4; This page cannot be displayed inside a frame.</div>';
+    }
+  }
+
+}
